@@ -1,0 +1,21 @@
+---
+- name: Ensure to fix SSH known hosts issue
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Execute Shell Script
+      ansible.builtin.shell: "for h in $(grep -i uat /vagrant/apps/config/release.config | awk '{ print $1 }'); do echo -----$h-----; ssh -q -o ConnectTimeout=5 $h 'timeout 5s echo $(whoami)@$(hostname) - $(uptime -s) - $(cat /etc/redhat-release)'; done"
+      async: 5
+      poll: 5
+      register: results
+      ignore_errors: true
+
+    - name: Ensure to get hostname
+      ansible.builtin.shell: hostname
+      register: myhostname_ansible
+
+    - name: Save output to /tmp/myhostname_precheck.txt
+      ansible.builtin.copy:
+        dest: /tmp/{{ myhostname_ansible.stdout }}_precheck.txt
+        content: "{{ (results.stdout_lines + results.stderr_lines) | join('\n') }}"
