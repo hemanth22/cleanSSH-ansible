@@ -4,6 +4,16 @@
   gather_facts: false
 
   tasks:
+
+    - name: create a directory and set permissions
+      ansible.builtin.file:
+        path: /tmp/CHG123456789
+        state: directory
+        mode: '0755'
+        recurse: true
+      async: 5
+      poll: 0
+
     - name: Execute Shell Script
       ansible.builtin.shell: "for h in $(grep -i uat /vagrant/apps/config/release.config | awk '{ print $1 }'); do echo -----$h-----; ssh -q -o ConnectTimeout=5 $h 'timeout 5s echo $(whoami)@$(hostname) - $(uptime -s) - $(cat /etc/redhat-release)'; done"
       async: 5
@@ -17,5 +27,5 @@
 
     - name: Save output to /tmp/myhostname_precheck.txt
       ansible.builtin.copy:
-        dest: /tmp/{{ myhostname_ansible.stdout }}_precheck.txt
-        content: "{{ (results.stdout_lines + results.stderr_lines) | join('\n') }}"
+        dest: /tmp/CHG123456789/{{ myhostname_ansible.stdout }}_precheck.txt
+        content: "{{ (results.stdout_lines + results.stderr_lines) | join('\n') + '\n' }}"
